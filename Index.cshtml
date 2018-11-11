@@ -1,0 +1,104 @@
+﻿@{
+	ViewBag.Title = "Home Page";
+}
+
+<script type="text/javascript">
+	var myGlobalToken;
+	var SessionChecker;
+
+	$(document).ready(function () {
+
+		$("#downloadForm").on("submit", function (event) {
+
+			/////////////show spiner////////////////
+			myGlobalToken = new Date().getTime(); //JavaScript time token
+
+			$('#spinnerToken').val(myGlobalToken); // set the hidden input our token value
+
+			var ua = window.navigator.userAgent;
+			var is_ie = /MSIE|Trident/.test(ua);
+
+			if (is_ie) {
+				//IE
+				$(".animatedSpinnerContainer").html("<img src=\"../../Images/spinner.gif\" />");
+			}
+			else {
+				$(".animatedSpinnerContainer").show();
+			}
+
+			//Check if the Session spinner token has been set, to compare it later
+			// on and hide  the spinner if the condition is met
+			checkSessionState();
+		});
+
+		function checkSessionState() {
+
+			SessionChecker = window.setInterval(function () {
+				//alert("check session state started");
+				//check for session using AJAX again:
+				$.ajax({
+					type: "POST",
+					url: "/Home/CheckForSpinnerSession",
+					success: function (returnedData) {
+						//alert(r);
+						if (returnedData.FileDownloadOK == myGlobalToken) {
+							hideSpinner();
+							alert(returnedData.FileDownloadTime);
+						}
+					}
+				});
+
+			}, 1000);
+
+		}
+
+		function hideSpinner() {
+			window.clearInterval(SessionChecker);
+			var UserAgent = window.navigator.userAgent;
+			var InternetExplorer = /MSIE|Trident/.test(UserAgent);
+
+			if (InternetExplorer) {
+				//IE
+				$(".animatedSpinnerContainer").html("");
+			}
+			else {
+				$(".animatedSpinnerContainer").hide();
+			}
+		}
+
+	});  //document ready end
+
+
+
+
+</script>
+
+<div class="container bg-success">
+	<h1>Showing spinner while waiting for download to finish</h1>
+	<p class="lead">The spinner below will appear for the duration of the download.Please click on the button below to start download.</p>
+
+	<form action="/Home/Download" method="post" id="downloadForm">
+		<p><input type="submit"  class="btn btn-primary btn-lg" value="Download" /></p>
+		<input type="hidden" id="spinnerToken" name="spinnerToken" />
+	</form>
+
+</div>
+
+<div class="row">
+	<div class="col-md-4">
+		&nbsp;
+	</div>
+	<div class="col-md-4">
+
+		<!-- [if !IE] -->
+		<p style="text-align:center;display: none;" id="animatedSpinnerContainer" class="animatedSpinnerContainer"><img src="~/Images/spinner.gif" /></p>
+		<!-- [endif] -->
+		<!--[if gte IE 9 -->
+		<p style="text-align:center" id="animatedSpinnerContainer" class="animatedSpinnerContainer"></p>
+		<!--<![endif]-->
+
+	</div>
+	<div class="col-md-4">
+		&nbsp;
+	</div>
+</div>
